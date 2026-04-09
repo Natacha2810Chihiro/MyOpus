@@ -37,6 +37,8 @@ export default function Profil() {
     ]);
   };
 
+  
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: couleurs.fond }]} showsVerticalScrollIndicator={false}>
 
@@ -132,6 +134,18 @@ export default function Profil() {
           </TouchableOpacity>
         </View>
 
+        {/* Bouton abonnement */}
+        <TouchableOpacity
+          style={styles.boutonAbonnement}
+          onPress={() => router.push("/abonnement")}
+        >
+          <Ionicons name="star-outline" size={20} color="#5647bf" />
+          <Text style={styles.boutonAbonnementTexte}>Je m'abonne</Text>
+          <View style={styles.badgeAbonnement}>
+            <Text style={styles.badgeAbonnementTexte}>Premium</Text>
+          </View>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.boutonDeco} onPress={handleDeconnexion}>
           <Ionicons name="log-out-outline" size={20} color="#64034b" />
           <Text style={styles.boutonDecoTexte}>Se déconnecter</Text>
@@ -168,4 +182,32 @@ const styles = StyleSheet.create({
   boutonDecoTexte: { color: "#64034b", fontWeight: "700", fontSize: 15 },
   toggleContainer: { width: 44, height: 24, borderRadius: 12, justifyContent: "center", padding: 2 },
   toggleBall: { width: 20, height: 20, borderRadius: 10, backgroundColor: "white" },
+  boutonAbonnement: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#ede9ff",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: "#cbc5f5",
+  },
+  boutonAbonnementTexte: {
+    flex: 1,
+    color: "#3c3489",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  badgeAbonnement: {
+    backgroundColor: "#5647bf",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  badgeAbonnementTexte: {
+    color: "white",
+    fontSize: 11,
+    fontWeight: "800",
+  },
 });
