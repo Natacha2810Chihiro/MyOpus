@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { httpsCallable } from "firebase/functions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { auth, functions } from "../firebaseConfig";
@@ -11,7 +11,7 @@ const PLANS = [
     id: "solo",
     nom: "Lecteur Solo",
     prix: "8,99€",
-    priceId: "prod_UInu949hfGG3lg",
+    priceId: "price_1TKCIxRelymrR49dOqMdKfaf",
     couleurIcon: "#ede9ff",
     couleurIconTexte: "#5647bf",
     iconName: "person-outline",
@@ -31,7 +31,7 @@ const PLANS = [
     id: "club",
     nom: "Books Club",
     prix: "19,99€",
-    priceId: "prod_UInxliX8swnArI",
+    priceId: "price_1TKCL6RelymrR49dxvDjcyZn",
     couleurIcon: "#fbd9f2",
     couleurIconTexte: "#64034b",
     iconName: "people-outline",
@@ -55,6 +55,18 @@ export default function Abonnement() {
   const router = useRouter();
   const { couleurs } = useTheme();
   const [chargement, setChargement] = useState<string | null>(null);
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      if (event.url.includes("abonnement/success")) {
+        router.replace("/abonnement-success");
+      } else if (event.url.includes("abonnement/cancel")) {
+        router.replace("/abonnement-cancel");
+      }
+    };
+  
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+    return () => subscription.remove();
+  }, []);
 
   const handleAbonnement = async (priceId: string, planId: string) => {
     const user = auth.currentUser;
@@ -65,17 +77,21 @@ export default function Abonnement() {
 
     setChargement(planId);
     try {
-      const creerAbonnement = httpsCallable(functions, "creerAbonnement");
+      console.log("1. Appel de la fonction...");
+      const creerAbonnement = httpsCallable(functions, "creerAbonnement", { timeout: 10000 });
+      console.log("2. Fonction créée, envoi des données...", priceId, user.email);
       const result: any = await creerAbonnement({
         priceId,
         email: user.email,
       });
-
+      console.log("3. Résultat reçu :", JSON.stringify(result));
       if (result.data?.url) {
         await Linking.openURL(result.data.url);
       }
     } catch (error: any) {
-      Alert.alert("Erreur", "Une erreur est survenue. Réessaie plus tard.");
+      console.log("ERREUR CODE :", error.code);
+      console.log("ERREUR MESSAGE :", error.message);
+      Alert.alert("Erreur", error.message);
     } finally {
       setChargement(null);
     }
