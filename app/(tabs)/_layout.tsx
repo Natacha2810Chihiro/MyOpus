@@ -1,66 +1,138 @@
-import { Ionicons } from "@expo/vector-icons";
+import { useFonts, YanoneKaffeesatz_500Medium } from "@expo-google-fonts/yanone-kaffeesatz";
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
+import { Image, Platform, Text, View } from "react-native";
+
+const icons = {
+  index: require("../../assets/images/icones/Accueil.png"),
+  ajouter: require("../../assets/images/icones/BiblioPerso.png"),
+  club: require("../../assets/images/icones/BookClub.png"),
+  defis: require("../../assets/images/icones/SearchAdd.png"),
+  profil: require("../../assets/images/icones/Profil.png"),
+};
+
+function TabIcon({ source, focused }: { source: any; focused: boolean }) {
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        backgroundColor: focused ? "#dcd8f5" : "transparent",
+        marginBottom: focused ? -20 : 0, // ← descend quand actif
+      }}
+    >
+      <Image
+        source={source}
+        style={{
+          width: 28,
+          height: 28,
+          tintColor: focused ? "#000" : "#000",
+        }}
+        resizeMode="contain"
+      />
+    </View>
+  );
+}
 
 export default function TabLayout() {
+  const [fontsLoaded] = useFonts({ YanoneKaffeesatz_500Medium });
+
+  if (!fontsLoaded) return null;
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#5647bf",
-        tabBarInactiveTintColor: "#b8b0e8",
+        tabBarInactiveTintColor: "#000",
         tabBarStyle: {
           backgroundColor: "#ffffff",
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: "#f0f0f0",
           elevation: 20,
           shadowColor: "#5647bf",
-          shadowOpacity: 0.12,
-          shadowRadius: 20,
-          shadowOffset: { width: 0, height: -4 },
-          height: Platform.OS === "ios" ? 85 : 65,
-          paddingBottom: Platform.OS === "ios" ? 28 : 10,
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: -2 },
+          height: Platform.OS === "ios" ? 90 : 70,
+          paddingBottom: Platform.OS === "ios" ? 24 : 8,
           paddingTop: 10,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
+          borderRadius: 20,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3 },
+        tabBarItemStyle: {
+          paddingVertical: 0,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        tabBarLabelStyle: {
+          fontSize: 15,
+          fontFamily: "YanoneKaffeesatz_500Medium",
+          fontWeight: "500",
+          letterSpacing: 0.2,
+          marginTop: 5,
+        },
+        tabBarIconStyle: {
+          marginBottom: 5,
+        },
         headerStyle: { backgroundColor: "#ffffff" },
-        headerTitleStyle: { fontWeight: "700", color: "#0f0939" },
+        headerTitleStyle: { fontWeight: "700", color: "#000" },
         headerShadowVisible: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Bibliothèque",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "book" : "book-outline"} size={24} color={color} />
+          title: "Home",
+          tabBarLabel: ({ focused }) => focused ? null : (
+            <Text style={{ fontSize: 15, fontFamily: "YanoneKaffeesatz_500Medium", color: "#000" }}>
+              Home
+            </Text>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.index} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="ajouter"
         options={{
-          title: "Ajouter",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={26} color={color} />
+          title: "Biblio",
+          tabBarLabel: ({ focused }) => focused ? null : (
+            <Text style={{ fontSize: 15, fontFamily: "YanoneKaffeesatz_500Medium", color: "#000" }}>
+              Home
+            </Text>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.ajouter} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="club"
         options={{
-          title: "Club",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "people" : "people-outline"} size={24} color={color} />
+          title: "Books Club",
+          tabBarLabel: ({ focused }) => focused ? null : (
+            <Text style={{ fontSize: 15, fontFamily: "YanoneKaffeesatz_500Medium", color: "#000" }}>
+              Home
+            </Text>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.club} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="defis"
         options={{
-          title: "Défis",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "trophy" : "trophy-outline"} size={24} color={color} />
+          title: "Search",
+          tabBarLabel: ({ focused }) => focused ? null : (
+            <Text style={{ fontSize: 15, fontFamily: "YanoneKaffeesatz_500Medium", color: "#000" }}>
+              Home
+            </Text>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.defis} focused={focused} />
           ),
         }}
       />
@@ -68,8 +140,13 @@ export default function TabLayout() {
         name="profil"
         options={{
           title: "Profil",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
+          tabBarLabel: ({ focused }) => focused ? null : (
+            <Text style={{ fontSize: 15, fontFamily: "YanoneKaffeesatz_500Medium", color: "#000" }}>
+              Home
+            </Text>
+          ),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.profil} focused={focused} />
           ),
         }}
       />

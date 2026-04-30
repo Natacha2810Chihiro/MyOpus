@@ -45,7 +45,8 @@
           "merchantIdentifier": "merchant.com.myopus",
           "enableGooglePay": false
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
