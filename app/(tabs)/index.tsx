@@ -1,3 +1,4 @@
+import { useFonts, YanoneKaffeesatz_700Bold } from "@expo-google-fonts/yanone-kaffeesatz";
 import { useRouter } from "expo-router";
 import { collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -14,15 +15,15 @@ import Header from "../../components/Header";
 import { useTheme } from "../../context/ThemeContext";
 import { auth, db } from "../../firebaseConfig";
 
-const GOOGLE_BOOKS_API_KEY = "VOTRE_CLE_ICI"; // ← remplacez ici
+const GOOGLE_BOOKS_API_KEY = "VOTRE_CLE_ICI";
 
 const GENRES = [
-  { label: "Tous", couleur: "#5647bf", couleurRuban: "#f0c93a" },
-  { label: "Fantasy", couleur: "#b8b0e8", couleurRuban: "#5647bf" },
-  { label: "Aventure", couleur: "#f0c93a", couleurRuban: "#f0c93a" },
-  { label: "Romance", couleur: "#f5c5d0", couleurRuban: "#8b1a5c" },
-  { label: "Thriller", couleur: "#1a2340", couleurRuban: "#aaaaaa" },
-  { label: "Fiction", couleur: "#b2ede8", couleurRuban: "#2abfb0" },
+  { label: "Tous", couleur: "#5647bf", image: require("../../assets/images/Design_genre/Design_tous.png") },
+  { label: "Fantasy", couleur: "#b8b0e8", image: require("../../assets/images/Design_genre/Design_fantasy.png") },
+  { label: "Aventure", couleur: "#f0c93a", image: require("../../assets/images/Design_genre/Design_aventure.png") },
+  { label: "Romance", couleur: "#f5c5d0", image: require("../../assets/images/Design_genre/Design_romance.png") },
+  { label: "Thriller", couleur: "#1a2340", image: require("../../assets/images/Design_genre/Design_thriller.png") },
+  { label: "Fiction", couleur: "#b2ede8", image: require("../../assets/images/Design_genre/Design_fiction.png") },
 ];
 
 const SUIVIES = [
@@ -35,6 +36,7 @@ const SUIVIES = [
 ];
 
 export default function Accueil() {
+  const [fontsLoaded] = useFonts({ YanoneKaffeesatz_700Bold });
   const router = useRouter();
   const { couleurs } = useTheme();
   const [livreEnCours, setLivreEnCours] = useState<any>(null);
@@ -45,7 +47,6 @@ export default function Accueil() {
   const prenom = userEmail.split("@")[0];
   const prenomCapitalize = prenom.charAt(0).toUpperCase() + prenom.slice(1);
 
-  // Lecture en cours depuis Firebase
   useEffect(() => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
@@ -62,7 +63,6 @@ export default function Accueil() {
     return unsubscribe;
   }, []);
 
-  // Livres du moment via Google Books
   useEffect(() => {
     const fetchLivres = async () => {
       try {
@@ -80,6 +80,8 @@ export default function Accueil() {
     fetchLivres();
   }, []);
 
+  if (!fontsLoaded) return null;
+
   return (
     <View style={[styles.container, { backgroundColor: couleurs.fond }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -89,7 +91,7 @@ export default function Accueil() {
 
         {/* Lecture en cours */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitre, { color: couleurs.texte }]}>Lecture en cours</Text>
+          <Text style={styles.sectionTitre}>Lecture en cours</Text>
           {livreEnCours ? (
             <TouchableOpacity
               style={[styles.lectureCard, { backgroundColor: couleurs.carte }]}
@@ -125,14 +127,14 @@ export default function Accueil() {
           ) : (
             <View style={[styles.lectureVide, { backgroundColor: couleurs.carte }]}>
               <Text style={{ fontSize: 32 }}>📚</Text>
-              <Text style={[{ color: couleurs.texteGris, marginTop: 8 }]}>Aucune lecture en cours</Text>
+              <Text style={{ color: couleurs.texteGris, marginTop: 8 }}>Aucune lecture en cours</Text>
             </View>
           )}
         </View>
 
         {/* Livres du moment */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitre, { color: couleurs.texte }]}>Les livres du moment</Text>
+          <Text style={styles.sectionTitre}>Les livres du moment</Text>
           {loadingLivres ? (
             <ActivityIndicator color="#5647bf" style={{ marginTop: 12 }} />
           ) : (
@@ -157,7 +159,7 @@ export default function Accueil() {
 
         {/* Explorer par genre */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitre, { color: couleurs.texte }]}>Explorer par genre</Text>
+          <Text style={styles.sectionTitre}>Explorer par genre</Text>
           <View style={styles.genreGrille}>
             {GENRES.map((genre) => (
               <TouchableOpacity
@@ -165,6 +167,11 @@ export default function Accueil() {
                 style={[styles.genreCard, { backgroundColor: genre.couleur }]}
                 activeOpacity={0.85}
               >
+                <Image
+                  source={genre.image}
+                  style={styles.genreImage}
+                  resizeMode="stretch"
+                />
                 <Text style={styles.genreLabel}>{genre.label}</Text>
               </TouchableOpacity>
             ))}
@@ -173,7 +180,7 @@ export default function Accueil() {
 
         {/* Mes suivies */}
         <View style={[styles.section, { marginBottom: 100 }]}>
-          <Text style={[styles.sectionTitre, { color: couleurs.texte }]}>Mes suivies</Text>
+          <Text style={styles.sectionTitre}>Mes suivies</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollH}>
             {SUIVIES.map((s) => (
               <View key={s.nom} style={styles.suivieItem}>
@@ -192,8 +199,12 @@ export default function Accueil() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   section: { paddingHorizontal: 20, marginTop: 28 },
-  sectionTitre: { fontSize: 18, fontWeight: "700", marginBottom: 14 },
-  // Lecture en cours
+  sectionTitre: {
+    fontSize: 20,
+    fontFamily: "YanoneKaffeesatz_700Bold",
+    color: "#838383",
+    marginBottom: 14,
+  },
   lectureCard: { flexDirection: "row", borderRadius: 20, padding: 14, gap: 14, shadowColor: "#5647bf", shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 },
   lectureCouverture: { width: 90, height: 130, borderRadius: 12 },
   lectureInfo: { flex: 1, justifyContent: "center" },
@@ -204,15 +215,13 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, backgroundColor: "#5647bf", borderRadius: 4 },
   progressTxt: { fontSize: 13, fontWeight: "700", color: "#5647bf" },
   lectureVide: { borderRadius: 20, padding: 24, alignItems: "center" },
-  // Livres du moment
   scrollH: { marginLeft: -4 },
   momentCard: { marginRight: 12 },
   momentCouverture: { width: 100, height: 150, borderRadius: 12 },
-  // Genres
   genreGrille: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  genreCard: { width: "30%", aspectRatio: 1, borderRadius: 16, justifyContent: "flex-end", padding: 10 },
+  genreCard: { width: "30%", aspectRatio: 1, borderRadius: 16, justifyContent: "flex-end", padding: 10, overflow: "hidden" },
+  genreImage: { position: "absolute", top: 0, left: 0, width: "130%", height: "130%", opacity: 1 },
   genreLabel: { color: "#fff", fontWeight: "800", fontSize: 15 },
-  // Suivies
   suivieItem: { alignItems: "center", marginRight: 16 },
   suivieAvatar: { width: 64, height: 64, borderRadius: 32, marginBottom: 6 },
   suivieNom: { fontSize: 12, fontWeight: "500" },

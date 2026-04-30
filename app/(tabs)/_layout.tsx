@@ -114,7 +114,7 @@ export default function TabLayout() {
           title: "Books Club",
           tabBarLabel: ({ focused }) => focused ? null : (
             <Text style={{ fontSize: 15, fontFamily: "YanoneKaffeesatz_500Medium", color: "#000" }}>
-              Home
+              Books Club
             </Text>
           ),
           tabBarIcon: ({ focused }) => (
