@@ -1,3 +1,4 @@
+//Navbar
 import { useFonts, YanoneKaffeesatz_500Medium } from "@expo-google-fonts/yanone-kaffeesatz";
 import { Tabs } from "expo-router";
 import { Image, Platform, Text, View } from "react-native";
@@ -95,7 +96,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="ajouter"
+        name="biblio"
         options={{
           title: "Biblio",
           tabBarLabel: ({ focused }) => focused ? null : (
@@ -123,7 +124,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="defis"
+        name="ajouter"
         options={{
           title: "Search",
           tabBarLabel: ({ focused }) => focused ? null : (

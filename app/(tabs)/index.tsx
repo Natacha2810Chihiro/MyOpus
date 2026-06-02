@@ -15,7 +15,7 @@ import Header from "../../components/Header";
 import { useTheme } from "../../context/ThemeContext";
 import { auth, db } from "../../firebaseConfig";
 
-const GOOGLE_BOOKS_API_KEY = "VOTRE_CLE_ICI";
+const GOOGLE_BOOKS_API_KEY = "AIzaSyBx-IEZEP4yBBo1N-v2YTwAQhoEdIcZ2EI";
 
 const GENRES = [
   { label: "Tous", couleur: "#5647bf", image: require("../../assets/images/Design_genre/Design_tous.png") },
