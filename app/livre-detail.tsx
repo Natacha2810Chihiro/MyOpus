@@ -15,9 +15,11 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Image,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -64,22 +66,35 @@ const STATUS_BUTTONS = [
   { id: "termine", label: "Terminé", color: "#E8C6E2" },
 ];
 
-function Stars({ note }: { note: number }) {
+function Stars({
+  note,
+  size = 18,
+  onPress,
+}: {
+  note: number;
+  size?: number;
+  onPress?: (n: number) => void;
+}) {
   return (
-    <View style={{ flexDirection: "row", gap: 2 }}>
+    <View style={{ flexDirection: "row", gap: 4 }}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Ionicons
+        <TouchableOpacity
           key={i}
-          name={
-            i <= Math.floor(note)
-              ? "star"
-              : i - note < 1
-                ? "star-half"
-                : "star-outline"
-          }
-          size={18}
-          color="#F5C518"
-        />
+          onPress={() => onPress?.(i)}
+          disabled={!onPress}
+        >
+          <Ionicons
+            name={
+              i <= Math.floor(note)
+                ? "star"
+                : i - note < 1
+                  ? "star-half"
+                  : "star-outline"
+            }
+            size={size}
+            color="#F5C518"
+          />
+        </TouchableOpacity>
       ))}
     </View>
   );
@@ -95,6 +110,11 @@ export default function LivreDetail() {
   const [activeStatus, setActiveStatus] = useState<string | null>(null);
   const [isFav, setIsFav] = useState(false);
   const [toast, setToast] = useState("");
+
+  // Modal terminé
+  const [showTermineModal, setShowTermineModal] = useState(false);
+  const [noteTermine, setNoteTermine] = useState(0);
+  const [commentaire, setCommentaire] = useState("");
 
   const [fontsLoaded] = useFonts({
     YanoneKaffeesatz_300Light,
@@ -184,6 +204,12 @@ export default function LivreDetail() {
     const user = auth.currentUser;
     if (!user) return;
 
+    // Si on appuie sur Terminé → ouvre la modale
+    if (statut === "Terminé") {
+      setShowTermineModal(true);
+      return;
+    }
+
     try {
       if (activeStatus === statut) {
         setActiveStatus(null);
@@ -230,6 +256,50 @@ export default function LivreDetail() {
     } catch (error) {
       console.error("Erreur Firestore:", error);
       showToast("❌ Une erreur est survenue");
+    }
+  };
+
+  const handleValiderTermine = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      setActiveStatus("Terminé");
+
+      const q = query(
+        collection(db, "livres"),
+        where("userId", "==", user.uid),
+        where("titre", "==", info.title),
+      );
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        snapshot.forEach(async (document) => {
+          await updateDoc(doc(db, "livres", document.id), {
+            statut: "Terminé",
+            note: noteTermine,
+            commentaire,
+          });
+        });
+      } else {
+        await addDoc(collection(db, "livres"), {
+          userId: user.uid,
+          titre: info.title,
+          auteur: info.authors?.join(", ") || "Auteur inconnu",
+          couverture: coverUrl || "",
+          statut: "Terminé",
+          progression: 100,
+          googleBooksId: id,
+          note: noteTermine,
+          commentaire,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      setShowTermineModal(false);
+      showToast("🎉 Bravo, livre terminé !");
+    } catch (error) {
+      console.error("Erreur Firestore:", error);
     }
   };
 
@@ -323,6 +393,14 @@ export default function LivreDetail() {
                 ]}
                 onPress={() => handleStatut(btn.label)}
               >
+                {activeStatus === btn.label && (
+                  <Ionicons
+                    name="checkmark"
+                    size={14}
+                    color="#5647bf"
+                    style={{ marginRight: 4 }}
+                  />
+                )}
                 <Text style={[styles.statusText, { color: "#000" }]}>
                   {btn.label}
                 </Text>
@@ -367,6 +445,99 @@ export default function LivreDetail() {
           <Text style={styles.toastText}>{toast}</Text>
         </View>
       )}
+
+      {/* MODALE TERMINÉ */}
+      <Modal
+        visible={showTermineModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowTermineModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* BOUTON FERMER */}
+            <TouchableOpacity
+              style={styles.modalClose}
+              onPress={() => setShowTermineModal(false)}
+            >
+              <Ionicons name="close" size={24} color="#000" />
+            </TouchableOpacity>
+
+            {/* LIVRE INFO */}
+            <View style={styles.modalLivreRow}>
+              {coverUrl && (
+                <Image source={{ uri: coverUrl }} style={styles.modalCover} />
+              )}
+              <View style={styles.modalLivreInfo}>
+                <Text style={styles.modalTitre} numberOfLines={2}>
+                  {info.title}
+                </Text>
+                <Text style={styles.modalAuteur}>
+                  {info.authors?.join(", ") || "Auteur inconnu"}
+                </Text>
+              </View>
+            </View>
+
+            {/* STATUTS */}
+            <View style={styles.modalStatusRow}>
+              {STATUS_BUTTONS.map((btn) => (
+                <View
+                  key={btn.id}
+                  style={[
+                    styles.modalStatusBtn,
+                    { backgroundColor: btn.color },
+                    btn.label === "Terminé" && styles.modalStatusBtnActive,
+                  ]}
+                >
+                  {btn.label === "Terminé" && (
+                    <Ionicons
+                      name="checkmark"
+                      size={12}
+                      color="#5647bf"
+                      style={{ marginRight: 3 }}
+                    />
+                  )}
+                  <Text style={styles.modalStatusText}>{btn.label}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* MESSAGE */}
+            <Text style={styles.modalMessage}>Tu as terminé ce livre ! 🎉</Text>
+            <Text style={styles.modalSubMessage}>
+              Quelle note lui donnes-tu ?
+            </Text>
+
+            {/* ETOILES */}
+            <View style={{ marginVertical: 12 }}>
+              <Stars note={noteTermine} size={36} onPress={setNoteTermine} />
+            </View>
+
+            {/* COMMENTAIRE */}
+            <Text style={styles.modalCommentLabel}>
+              Laisse un commentaire{" "}
+              <Text style={{ color: "#aaa" }}>(optionnel)</Text>
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              multiline
+              numberOfLines={4}
+              placeholder="Ton avis sur ce livre..."
+              placeholderTextColor="#bbb"
+              value={commentaire}
+              onChangeText={setCommentaire}
+            />
+
+            {/* BOUTON VALIDER */}
+            <TouchableOpacity
+              style={styles.modalValider}
+              onPress={handleValiderTermine}
+            >
+              <Text style={styles.modalValiderText}>Valider</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -497,6 +668,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
   },
   statusText: {
     fontSize: 15,
@@ -586,5 +759,116 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontFamily: "YanoneKaffeesatz_700Bold",
+  },
+
+  // MODALE
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#D8D5E8",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalClose: {
+    alignSelf: "flex-end",
+    marginBottom: 8,
+  },
+  modalLivreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 12,
+    marginBottom: 16,
+  },
+  modalCover: {
+    width: 60,
+    height: 85,
+    borderRadius: 8,
+  },
+  modalLivreInfo: {
+    flex: 1,
+  },
+  modalTitre: {
+    fontSize: 18,
+    color: "#000",
+    fontFamily: "Kavoon_400Regular",
+    marginBottom: 4,
+  },
+  modalAuteur: {
+    fontSize: 15,
+    color: "#5647bf",
+    fontFamily: "YanoneKaffeesatz_700Bold",
+  },
+  modalStatusRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 20,
+    flexWrap: "wrap",
+  },
+  modalStatusBtn: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  modalStatusBtnActive: {
+    borderWidth: 2,
+    borderColor: "#5647bf",
+  },
+  modalStatusText: {
+    fontSize: 14,
+    fontFamily: "YanoneKaffeesatz_700Bold",
+    color: "#000",
+  },
+  modalMessage: {
+    fontSize: 24,
+    color: "#000",
+    fontFamily: "Kavoon_400Regular",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  modalSubMessage: {
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "YanoneKaffeesatz_300Light",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  modalCommentLabel: {
+    fontSize: 16,
+    color: "#000",
+    fontFamily: "YanoneKaffeesatz_700Bold",
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  modalInput: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 14,
+    fontSize: 15,
+    fontFamily: "YanoneKaffeesatz_300Light",
+    color: "#000",
+    minHeight: 100,
+    textAlignVertical: "top",
+    marginBottom: 20,
+  },
+  modalValider: {
+    backgroundColor: "#5647bf",
+    borderRadius: 24,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  modalValiderText: {
+    color: "#fff",
+    fontSize: 18,
+    fontFamily: "Kavoon_400Regular",
   },
 });
