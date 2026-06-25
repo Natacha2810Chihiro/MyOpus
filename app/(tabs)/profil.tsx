@@ -1,213 +1,404 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { signOut } from "firebase/auth";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "../../context/ThemeContext";
-import { auth, db } from "../../firebaseConfig";
+import React from "react";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import { Ionicons } from "@expo/vector-icons";
+
+import {
+  YanoneKaffeesatz_300Light,
+  YanoneKaffeesatz_700Bold,
+  useFonts,
+} from "@expo-google-fonts/yanone-kaffeesatz";
+
+import { Kavoon_400Regular } from "@expo-google-fonts/kavoon";
 
 export default function Profil() {
-  const [livres, setLivres] = useState([]);
-  const user = auth.currentUser;
-  const prenom = user?.email?.split("@")[0] ?? "Lecteur";
-  const initiale = prenom[0].toUpperCase();
-  const router = useRouter();
-  const { sombre, toggleTheme, couleurs } = useTheme();
+  const router = useRouter(); // ✅ ICI, dans le composant
 
-  useEffect(() => {
-    const userId = user?.uid;
-    if (!userId) return;
-    const q = query(collection(db, "livres"), where("userId", "==", userId));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setLivres(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
-    return unsubscribe;
-  }, []);
+  const [fontsLoaded] = useFonts({
+    YanoneKaffeesatz_300Light,
+    YanoneKaffeesatz_700Bold,
+    Kavoon_400Regular,
+  });
 
-  const total = livres.length;
-  const enCours = livres.filter((l: any) => l.statut === "En cours").length;
-  const termines = livres.filter((l: any) => l.statut === "Terminé").length;
-  const aLire = livres.filter((l: any) => l.statut === "À lire").length;
-
-  const handleDeconnexion = async () => {
-    Alert.alert("Déconnexion", "Tu veux vraiment partir ? 👋", [
-      { text: "Annuler", style: "cancel" },
-      { text: "Déconnexion", style: "destructive", onPress: async () => await signOut(auth) },
-    ]);
-  };
-
-  
+  if (!fontsLoaded) return null;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: couleurs.fond }]} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
+        {/* HEADER */}
+        <View style={styles.header}>
+          {/* VAGUE */}
+          <View style={styles.wave} />
 
-    <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/modifier-profil")}>
-      <View style={[styles.menuIconBox, { backgroundColor: couleurs.fondSecondaire }]}>
-        <Ionicons name="pencil-outline" size={20} color="#5647bf" />
-      </View>
-      <Text style={[styles.menuTexte, { color: couleurs.texte }]}>Modifier mon profil</Text>
-      <Ionicons name="chevron-forward" size={18} color={couleurs.texteGris} />
-    </TouchableOpacity>
+          {/* PERSONNAGE */}
+          <Image
+            source={require("../../assets/images/Design_logo/Logo_vectoriser_fille.png")}
+            style={styles.character}
+          />
 
-    <View style={[styles.separateur, { backgroundColor: couleurs.bordure }]} />
+          {/* AVATAR */}
+          <Image
+            source={require("../../assets/images/Design_logo/avatar_default.jpeg")}
+            style={styles.avatar}
+          />
 
-      <View style={[styles.header, { backgroundColor: couleurs.fond }]}>
-        <View style={styles.avatarContainer}>
-          <View style={[styles.avatar, { backgroundColor: sombre ? "#cbc5f5" : "#0f0939" }]}>
-            <Text style={[styles.avatarTexte, { color: sombre ? "#0f0939" : "#ffe594" }]}>{initiale}</Text>
+          {/* NOM */}
+          <Text style={styles.name}>Hello Sophie</Text>
+
+          {/* NIVEAU */}
+          <View style={styles.levelRow}>
+            <View style={styles.levelDot} />
+            <Text style={styles.levelText}>Néophyte</Text>
           </View>
-          <View style={[styles.niveauBadge, { backgroundColor: couleurs.accent }]}>
-            <Text style={[styles.niveauTexte, { color: couleurs.accentTexte }]}>Niv. 5</Text>
+
+          {/* STATS */}
+          <View style={styles.statsRow}>
+            <View style={[styles.statCard, { backgroundColor: "#BCE7E2" }]}>
+              <Text style={styles.statNumber}>47</Text>
+              <Text style={styles.statLabel}>Livres lus</Text>
+            </View>
+
+            <View style={[styles.statCard, { backgroundColor: "#E8C6E2" }]}>
+              <Text style={styles.statNumber}>3</Text>
+              <Text style={styles.statLabel}>Favoris</Text>
+            </View>
+
+            <View style={[styles.statCard, { backgroundColor: "#F5DC82" }]}>
+              <Text style={styles.statNumber}>12</Text>
+              <Text style={styles.statLabel}>A lire</Text>
+            </View>
+
+            <View style={[styles.statCard, { backgroundColor: "#CBC3F4" }]}>
+              <Text style={styles.statNumber}>8</Text>
+              <Text style={styles.statLabel}>Avis écrits</Text>
+            </View>
           </View>
         </View>
-        <Text style={[styles.prenom, { color: couleurs.texte }]}>{prenom}</Text>
-        <Text style={[styles.email, { color: couleurs.texteGris }]}>{user?.email}</Text>
-      </View>
 
-      <View style={[styles.body, { backgroundColor: couleurs.fondSecondaire }]}>
-        <Text style={[styles.sectionTitre, { color: couleurs.texte }]}>Mes stats de lecture</Text>
-        <View style={styles.statsGrille}>
-          <View style={[styles.statBox, { backgroundColor: "#fbd9f2" }]}>
-            <Text style={styles.statNombre}>{total}</Text>
-            <Text style={styles.statLabel}>Total</Text>
-            <Ionicons name="library-outline" size={20} color="#64034b" style={styles.statIcon} />
-          </View>
-          <View style={[styles.statBox, { backgroundColor: "#c7f0ec" }]}>
-            <Text style={styles.statNombre}>{enCours}</Text>
-            <Text style={styles.statLabel}>En cours</Text>
-            <Ionicons name="book-outline" size={20} color="#0f6b65" style={styles.statIcon} />
-          </View>
-          <View style={[styles.statBox, { backgroundColor: "#ffe594" }]}>
-            <Text style={styles.statNombre}>{termines}</Text>
-            <Text style={styles.statLabel}>Terminés</Text>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#7a5a00" style={styles.statIcon} />
-          </View>
-          <View style={[styles.statBox, { backgroundColor: "#cbc5f5" }]}>
-            <Text style={styles.statNombre}>{aLire}</Text>
-            <Text style={styles.statLabel}>À lire</Text>
-            <Ionicons name="bookmark-outline" size={20} color="#5647bf" style={styles.statIcon} />
-          </View>
+        {/* BLOC BAS */}
+        <View style={styles.bottomContainer}>
+          {/* ACTIVITES */}
+          <Text style={styles.sectionTitle}>Mes activités</Text>
+
+          <TouchableOpacity style={styles.menuCard}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="trophy-outline" size={34} color="#000" />
+              <View>
+                <Text style={styles.menuTitle}>Mes défis lecture</Text>
+                <Text style={styles.menuSubtitle}>2 badges gagnés</Text>
+              </View>
+            </View>
+            <Ionicons
+              name="arrow-forward-circle-outline"
+              size={40}
+              color="#000"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuCard}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="pie-chart-outline" size={34} color="#000" />
+              <View>
+                <Text style={styles.menuTitle}>Mes statistiques</Text>
+                <Text style={styles.menuSubtitle}>8 avis publiés</Text>
+              </View>
+            </View>
+            <Ionicons
+              name="arrow-forward-circle-outline"
+              size={40}
+              color="#000"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuCard}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="create-outline" size={34} color="#000" />
+              <View>
+                <Text style={styles.menuTitle}>Mes avis</Text>
+                <Text style={styles.menuSubtitle}>8 avis publiés</Text>
+              </View>
+            </View>
+            <Ionicons
+              name="arrow-forward-circle-outline"
+              size={40}
+              color="#000"
+            />
+          </TouchableOpacity>
+
+          {/* PREFERENCES */}
+          <Text style={styles.sectionTitle}>Mes préférences</Text>
+
+          <TouchableOpacity style={styles.menuCard}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="moon-outline" size={34} color="#000" />
+              <View>
+                <Text style={styles.menuTitle}>Mode sombre</Text>
+              </View>
+            </View>
+            <Ionicons
+              name="arrow-forward-circle-outline"
+              size={40}
+              color="#000"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuCard}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="settings-outline" size={34} color="#000" />
+              <View>
+                <Text style={styles.menuTitle}>Paramètres</Text>
+                <Text style={styles.menuSubtitle}>
+                  Confidentialités, notifications
+                </Text>
+              </View>
+            </View>
+            <Ionicons
+              name="arrow-forward-circle-outline"
+              size={40}
+              color="#000"
+            />
+          </TouchableOpacity>
+
+          {/* PRO */}
+          <TouchableOpacity
+            style={styles.proCard}
+            onPress={() => router.push("/abonnement")} // ✅ onPress propre
+          >
+            <View>
+              <Text style={styles.proTitle}>Passer à MyOpus Pro</Text>
+              <Text style={styles.proSubtitle}>
+                Clubs illimités, stats avancées...
+              </Text>
+            </View>
+
+            <View style={styles.proButton}>
+              <Text style={styles.proButtonText}>Voir</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* LOGOUT */}
+          <TouchableOpacity style={styles.logoutCard}>
+            <Ionicons name="log-out-outline" size={42} color="#000" />
+            <Text style={styles.logoutText}>Se déconnecter</Text>
+          </TouchableOpacity>
         </View>
-
-        <Text style={[styles.sectionTitre, { color: couleurs.texte }]}>Mon compte</Text>
-        <View style={[styles.menuContainer, { backgroundColor: couleurs.carte }]}>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/(tabs)/defis")}>
-            <View style={[styles.menuIconBox, { backgroundColor: couleurs.fondSecondaire }]}>
-              <Ionicons name="trophy-outline" size={20} color="#5647bf" />
-            </View>
-            <Text style={[styles.menuTexte, { color: couleurs.texte }]}>Mes défis</Text>
-            <Ionicons name="chevron-forward" size={18} color={couleurs.texteGris} />
-          </TouchableOpacity>
-
-          <View style={[styles.separateur, { backgroundColor: couleurs.bordure }]} />
-
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/statistiques")}>
-            <View style={[styles.menuIconBox, { backgroundColor: couleurs.fondSecondaire }]}>
-              <Ionicons name="stats-chart-outline" size={20} color="#5647bf" />
-            </View>
-            <Text style={[styles.menuTexte, { color: couleurs.texte }]}>Mes statistiques</Text>
-            <Ionicons name="chevron-forward" size={18} color={couleurs.texteGris} />
-          </TouchableOpacity>
-
-          <View style={[styles.separateur, { backgroundColor: couleurs.bordure }]} />
-
-          {/* Toggle mode sombre */}
-          <TouchableOpacity style={styles.menuItem} onPress={toggleTheme}>
-            <View style={[styles.menuIconBox, { backgroundColor: couleurs.fondSecondaire }]}>
-              <Ionicons name={sombre ? "sunny-outline" : "moon-outline"} size={20} color="#5647bf" />
-            </View>
-            <Text style={[styles.menuTexte, { color: couleurs.texte }]}>{sombre ? "Mode clair" : "Mode sombre"}</Text>
-            <View style={[styles.toggleContainer, { backgroundColor: sombre ? "#5647bf" : "#ede9ff" }]}>
-              <View style={[styles.toggleBall, { transform: [{ translateX: sombre ? 20 : 0 }] }]} />
-            </View>
-          </TouchableOpacity>
-
-          <View style={[styles.separateur, { backgroundColor: couleurs.bordure }]} />
-
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={[styles.menuIconBox, { backgroundColor: couleurs.fondSecondaire }]}>
-              <Ionicons name="settings-outline" size={20} color="#5647bf" />
-            </View>
-            <Text style={[styles.menuTexte, { color: couleurs.texte }]}>Paramètres</Text>
-            <Ionicons name="chevron-forward" size={18} color={couleurs.texteGris} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Bouton abonnement */}
-        <TouchableOpacity
-          style={styles.boutonAbonnement}
-          onPress={() => router.push("/abonnement")}
-        >
-          <Ionicons name="star-outline" size={20} color="#5647bf" />
-          <Text style={styles.boutonAbonnementTexte}>Je m'abonne</Text>
-          <View style={styles.badgeAbonnement}>
-            <Text style={styles.badgeAbonnementTexte}>Premium</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.boutonDeco} onPress={handleDeconnexion}>
-          <Ionicons name="log-out-outline" size={20} color="#64034b" />
-          <Text style={styles.boutonDecoTexte}>Se déconnecter</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-    
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { alignItems: "center", paddingTop: 32, paddingBottom: 32, paddingHorizontal: 24 },
-  avatarContainer: { position: "relative", marginBottom: 16 },
-  avatar: { width: 90, height: 90, borderRadius: 45, justifyContent: "center", alignItems: "center" },
-  avatarTexte: { fontSize: 36, fontWeight: "800" },
-  niveauBadge: { position: "absolute", bottom: -4, right: -4, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 },
-  niveauTexte: { fontSize: 11, fontWeight: "800" },
-  prenom: { fontSize: 24, fontWeight: "800", marginBottom: 4, textTransform: "capitalize" },
-  email: { fontSize: 13 },
-  body: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, flex: 1 },
-  sectionTitre: { fontSize: 16, fontWeight: "700", marginBottom: 14, marginTop: 8 },
-  statsGrille: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 28 },
-  statBox: { width: "47%", borderRadius: 20, padding: 16, position: "relative", overflow: "hidden" },
-  statNombre: { fontSize: 28, fontWeight: "800", color: "#0f0939" },
-  statLabel: { fontSize: 13, color: "#0f0939", fontWeight: "500", opacity: 0.7, marginTop: 2 },
-  statIcon: { position: "absolute", bottom: 12, right: 12, opacity: 0.5 },
-  menuContainer: { borderRadius: 20, marginBottom: 24, shadowColor: "#5647bf", shadowOpacity: 0.06, shadowRadius: 10, elevation: 2 },
-  menuItem: { flexDirection: "row", alignItems: "center", padding: 16 },
-  menuIconBox: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center", marginRight: 14 },
-  menuTexte: { flex: 1, fontSize: 15, fontWeight: "600" },
-  separateur: { height: 1, marginHorizontal: 16 },
-  boutonDeco: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#fbd9f2", borderRadius: 16, padding: 16 },
-  boutonDecoTexte: { color: "#64034b", fontWeight: "700", fontSize: 15 },
-  toggleContainer: { width: 44, height: 24, borderRadius: 12, justifyContent: "center", padding: 2 },
-  toggleBall: { width: 20, height: 20, borderRadius: 10, backgroundColor: "white" },
-  boutonAbonnement: {
+  container: {
+    flex: 1,
+    backgroundColor: "#F2F2F2",
+  },
+
+  header: {
+    alignItems: "center",
+    paddingTop: 20,
+    paddingBottom: 30,
+    overflow: "hidden",
+  },
+
+  wave: {
+    position: "absolute",
+    top: -30,
+    left: -40,
+    right: -40,
+    height: 140,
+    borderRadius: 999,
+    borderWidth: 18,
+    borderColor: "#C9C2F4",
+  },
+
+  character: {
+    position: "absolute",
+    left: 10,
+    top: 50,
+    width: 120,
+    height: 120,
+    resizeMode: "contain",
+  },
+
+  avatar: {
+    width: 125,
+    height: 125,
+    borderRadius: 62,
+    marginTop: 40,
+    marginBottom: 16,
+  },
+
+  name: {
+    fontSize: 42,
+    color: "#000",
+    fontFamily: "YanoneKaffeesatz_700Bold",
+  },
+
+  levelRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    backgroundColor: "#ede9ff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: "#cbc5f5",
+    marginTop: 6,
   },
-  boutonAbonnementTexte: {
-    flex: 1,
-    color: "#3c3489",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  badgeAbonnement: {
-    backgroundColor: "#5647bf",
+
+  levelDot: {
+    width: 20,
+    height: 20,
     borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    backgroundColor: "#D9D9D9",
+    marginRight: 10,
   },
-  badgeAbonnementTexte: {
-    color: "white",
-    fontSize: 11,
-    fontWeight: "800",
+
+  levelText: {
+    fontSize: 22,
+    color: "#4F4F4F",
+    fontFamily: "YanoneKaffeesatz_300Light",
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 16,
+    marginTop: 34,
+  },
+
+  statCard: {
+    width: "23%",
+    height: 70,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  statNumber: {
+    fontSize: 24,
+    color: "#000",
+    fontFamily: "Kavoon_400Regular",
+  },
+
+  statLabel: {
+    fontSize: 12,
+    color: "#000",
+    marginTop: 2,
+    fontFamily: "YanoneKaffeesatz_300Light",
+  },
+
+  bottomContainer: {
+    backgroundColor: "#D8D5E8",
+    borderTopLeftRadius: 70,
+    borderTopRightRadius: 70,
+    paddingTop: 42,
+    paddingHorizontal: 24,
+    minHeight: 900,
+  },
+
+  sectionTitle: {
+    fontSize: 22,
+    color: "#838383",
+    marginBottom: 18,
+    fontFamily: "YanoneKaffeesatz_700Bold",
+  },
+
+  menuCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  menuLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+
+  menuTitle: {
+    fontSize: 20,
+    color: "#000",
+    fontFamily: "Kavoon_400Regular",
+  },
+
+  menuSubtitle: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 2,
+    fontFamily: "YanoneKaffeesatz_300Light",
+  },
+
+  proCard: {
+    marginTop: 20,
+    backgroundColor: "#F5DC82",
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  proTitle: {
+    fontSize: 22,
+    color: "#000",
+    fontFamily: "Kavoon_400Regular",
+  },
+
+  proSubtitle: {
+    fontSize: 14,
+    color: "#5E5E5E",
+    marginTop: 4,
+    fontFamily: "YanoneKaffeesatz_300Light",
+  },
+
+  proButton: {
+    backgroundColor: "#F8E8AA",
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+
+  proButtonText: {
+    fontSize: 18,
+    color: "#000",
+    fontFamily: "YanoneKaffeesatz_700Bold",
+  },
+
+  logoutCard: {
+    marginTop: 24,
+    backgroundColor: "#BCE7E2",
+    borderRadius: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 22,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+
+  logoutText: {
+    fontSize: 24,
+    color: "#000",
+    fontFamily: "Kavoon_400Regular",
   },
 });
